@@ -130,48 +130,38 @@ student_names = [
 
 # 请在创建新功能后更新此处！
 
-# API函数
-from .api import (  # noqa: E402
-    PostAPI,
-    PostWithoutTokenAPI,
-    PostEduAPI,
-    GetAPI,
-    GetWithoutTokenAPI,
-    PutAPI,
-    DeleteAPI,
-)
-
-# 用户功能
-from .user import (  # noqa: E402
-    GetUserToken,
-    CheckToken,
-    SignatureUser,
-    FollowUser,
-)
-
-# 作品功能
-from .work import (  # noqa: E402
-    GetUserWork,
-    LikeWork,
-    CollectionWork,
-    ReportWork,
-    SendReviewToWork,
-    TopReview,
-    UnTopReview,
-    ViewWork,
-    ForkWork,
-)
-
-# EDU功能
-from .edu import (  # noqa: E402
-    CreateClassOnEdu,
-    CreateStudentOnEdu,
-    MergeStudentXls,
-    LoginUseEdu,
-)
-
-# 导入命令行
-from .cli import CreateParser  # noqa: E402
+_LAZY_IMPORTS = {
+    # API
+    "PostAPI": (".api", "PostAPI"),
+    "PostWithoutTokenAPI": (".api", "PostWithoutTokenAPI"),
+    "PostEduAPI": (".api", "PostEduAPI"),
+    "GetAPI": (".api", "GetAPI"),
+    "GetWithoutTokenAPI": (".api", "GetWithoutTokenAPI"),
+    "PutAPI": (".api", "PutAPI"),
+    "DeleteAPI": (".api", "DeleteAPI"),
+    # 用户
+    "GetUserToken": (".user", "GetUserToken"),
+    "CheckToken": (".user", "CheckToken"),
+    "SignatureUser": (".user", "SignatureUser"),
+    "FollowUser": (".user", "FollowUser"),
+    # 作品
+    "GetUserWork": (".work", "GetUserWork"),
+    "LikeWork": (".work", "LikeWork"),
+    "CollectionWork": (".work", "CollectionWork"),
+    "ReportWork": (".work", "ReportWork"),
+    "SendReviewToWork": (".work", "SendReviewToWork"),
+    "TopReview": (".work", "TopReview"),
+    "UnTopReview": (".work", "UnTopReview"),
+    "ViewWork": (".work", "ViewWork"),
+    "ForkWork": (".work", "ForkWork"),
+    # 教育版
+    "CreateClassOnEdu": (".edu", "CreateClassOnEdu"),
+    "CreateStudentOnEdu": (".edu", "CreateStudentOnEdu"),
+    "MergeStudentXls": (".edu", "MergeStudentXls"),
+    "LoginUseEdu": (".edu", "LoginUseEdu"),
+    # 命令行
+    "CreateParser": (".cli", "CreateParser"),
+}
 
 # 请在创建新功能后更新此处！导入控制
 __all__ = [
@@ -213,6 +203,21 @@ __all__ = [
     # 命令行
     "CreateParser",
 ]
+
+
+def __getattr__(name: str):
+    """按需加载模块，减少初始化导入时间。"""
+    if name in _LAZY_IMPORTS:
+        module_name, attr_name = _LAZY_IMPORTS[name]
+        module = __import__(module_name, globals(), locals(), [attr_name], 1)
+        value = getattr(module, attr_name)
+        globals()[name] = value
+        return value
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
+
+def __dir__() -> list[str]:
+    return sorted(list(globals().keys()) + list(_LAZY_IMPORTS.keys()))
 
 
 # 包函数
